@@ -8,12 +8,12 @@ dotenv.config({ path: path.resolve(envDir, 'playwright.env') });
 
 // Override with env-specific file when TEST_ENV is set
 const testEnv = process.env.TEST_ENV;
-if (testEnv === 'ci' || testEnv === 'staging') {
+if (testEnv === 'staging') {
   const envFile = path.resolve(envDir, `playwright.env.${testEnv}`);
   dotenv.config({ path: envFile, override: true });
 }
 
-const environment = (process.env.TEST_ENV || 'local') as 'local' | 'ci' | 'staging';
+const environment = (process.env.TEST_ENV || 'local') as 'local' | 'staging';
 
 const environments = {
   local: {
@@ -22,33 +22,22 @@ const environments = {
     workers: undefined,
     retries: 0,
   },
-  ci: {
-    baseURL: process.env.BASE_URL || 'https://practicetestautomation.com',
-    timeout: 45_000,
-    workers: 2,
-    retries: 2,
-  },
   staging: {
     baseURL: process.env.BASE_URL!,
     timeout: 60_000,
     workers: 2,
     retries: 1,
-  },
+  }
 } as const;
 
 const envConfig = environments[environment] ?? environments.local;
-
-// Set TEST_WORKERS environment variable for reporter to detect execution mode
-// Use 1 for undefined (which means auto/parallel in Playwright, but we'll track as default parallel)
-const workerCount = envConfig.workers;
-process.env.TEST_WORKERS = String(workerCount);
 
 export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: envConfig.retries,
-  workers: envConfig.workers,
+  workers: envConfig.workers,  // Playwright uses this value
   reporter: [
     ['html', { outputFolder: 'reports/html' }],
     ['list'],

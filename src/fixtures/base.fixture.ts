@@ -2,10 +2,12 @@ import { test as base } from '@playwright/test';
 import { LoginPage } from '../pages/login.page';
 import { LoggedInSuccessPage } from '../pages/logged-in-success.page';
 import { TestTablePage } from '../pages/test-table.page';
+import { HomePage } from '../pages/home.page';
 import { users, type UserRoles } from '../test-data/users.data';
 import { ScreenshotHelper } from '../helpers/screenshot.helper';
 
 type fixture = {
+  homePage: HomePage;
   loginPage: LoginPage;
   loggedInSuccessPage: LoggedInSuccessPage;
   testTablePage: TestTablePage;
@@ -13,6 +15,9 @@ type fixture = {
 }
 
 export const test = base.extend<fixture>({
+  homePage: async ({ page }, use) => {
+    await use(new HomePage(page));
+  },
   loginPage: async ({ page }, use) => {
     await use(new LoginPage(page));
   },
@@ -30,13 +35,9 @@ export const test = base.extend<fixture>({
 // Automatically capture screenshots on test completion
 test.afterEach(async ({ page }, testInfo) => {
   try {
-    const status = testInfo.status === 'passed' ? 'pass' : 
-                   testInfo.status === 'failed' ? 'fail' : 'skip';
-    
     const screenshotPath = await ScreenshotHelper.captureScreenshot(
       page,
-      testInfo.title,
-      status,
+      testInfo,
       process.env.TEST_ENV || 'local'
     );
 

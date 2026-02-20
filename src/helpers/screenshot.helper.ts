@@ -2,7 +2,7 @@
  * Screenshot Helper - Utility for capturing and organizing test evidence
  */
 
-import { Page } from '@playwright/test';
+import { Page, TestInfo } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -12,15 +12,13 @@ export class ScreenshotHelper {
   /**
    * Capture a screenshot and save it to organized directory structure
    * @param page Playwright page object
-   * @param testName Name of the test
-   * @param status Pass/fail/skip status
+   * @param testInfo Playwright TestInfo object
    * @param environment local/staging/ci
    * @returns Relative path to screenshot
    */
   static async captureScreenshot(
     page: Page,
-    testName: string,
-    status: 'pass' | 'fail' | 'skip',
+    testInfo: TestInfo,
     environment: string = 'local'
   ): Promise<string> {
     try {
@@ -33,18 +31,20 @@ export class ScreenshotHelper {
 
       // Generate filename: testName_timestamp_status.png
       const timestamp = Date.now();
-      const sanitizedTestName = this.sanitizeTestName(testName);
+      const status = testInfo.status === 'passed' ? 'pass' : 
+                     testInfo.status === 'failed' ? 'fail' : 'skip';
+      const sanitizedTestName = this.sanitizeTestName(testInfo.title);
       const filename = `${sanitizedTestName}_${timestamp}_${status}.png`;
       const filePath = path.join(screenshotDir, filename);
 
-      // Capture screenshot
-      await page.screenshot({ path: filePath });
+      // Capture screenshot using Playwright's built-in method
+      await page.screenshot({ path: filePath, fullPage: true });
 
       // Return relative path for embedding in reports
       const relativePath = `screenshots/${dateFolder}/${envFolder}/${filename}`;
       return relativePath;
     } catch (error) {
-      console.error(`Failed to capture screenshot for test "${testName}":`, error);
+      console.error(`Failed to capture screenshot:`, error);
       return '';
     }
   }

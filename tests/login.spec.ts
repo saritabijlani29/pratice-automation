@@ -1,8 +1,9 @@
 import { test, expect } from '../src/fixtures/base.fixture';
 
 test.describe('Login', () => {
-  test.beforeEach(async ({ loginPage }) => {
-    await loginPage.navigate();
+  test.beforeEach(async ({ homePage }) => {
+    await homePage.navigate();
+    await homePage.goToTestLoginPage();
   });
 
   test('successful login with valid credentials redirects to success page', async ({

@@ -1,8 +1,9 @@
 import { test, expect } from '../src/fixtures/base.fixture';
 
 test.describe('Logged In Success Page', () => {
-  test.beforeEach(async ({ loginPage, loggedInSuccessPage, testUsers,page }) => {
-    await loginPage.navigate();
+  test.beforeEach(async ({ homePage, loginPage, testUsers, page }) => {
+    await homePage.navigate();
+    await homePage.goToTestLoginPage();
     await loginPage.login(testUsers.valid.username, testUsers.valid.password);
     await expect(page).toHaveURL(/logged-in-successfully/);
   });

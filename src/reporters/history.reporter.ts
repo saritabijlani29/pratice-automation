@@ -5,6 +5,7 @@
 import {
   Reporter,
   FullResult,
+  FullConfig,
   TestCase,
   TestResult as PlaywrightTestResult,
 } from '@playwright/test/reporter';
@@ -25,14 +26,17 @@ export default class HistoryReporter implements Reporter {
   private failCount = 0;
   private skipCount = 0;
   private totalTests = 0;
+  private workerCount = 2;  // Default: parallel
 
   constructor() {
     this.historyFilePath = path.resolve(__dirname, '../../execution-history.json');
     this.executionStartTime = new Date();
   }
 
-  onBegin(): void {
-    console.log('[HistoryReporter] Test execution started');
+  onBegin(config: FullConfig): void {
+    // Get workers count directly from Playwright's full config
+    this.workerCount = config.workers ?? 2;  // Default: parallel if undefined
+    console.log(`[HistoryReporter] Test execution started (workers: ${this.workerCount})`);
   }
 
   onTestEnd(test: TestCase, result: PlaywrightTestResult): void {
@@ -162,41 +166,10 @@ export default class HistoryReporter implements Reporter {
   }
 
   /**
-   * Get worker count from environment or derive from test timing
+   * Get worker count (already captured in onBegin from config)
    */
   private getWorkerCount(): number {
-    // First, check if TEST_WORKERS environment variable is set
-    const testWorkers = process.env.TEST_WORKERS;
-    if (testWorkers) {
-      return parseInt(testWorkers, 10);
-    }
-
-    // Check PLAYWRIGHT_WORKERS (sometimes used)
-    const pwWorkers = process.env.PLAYWRIGHT_WORKERS;
-    if (pwWorkers) {
-      return parseInt(pwWorkers, 10);
-    }
-
-    // Derive from test execution timing
-    // If tests ran in parallel, multiple tests would have overlapping timestamps
-    if (this.testResults.length > 1) {
-      const startTimes = this.testResults.map((r) => new Date(r.timestamp).getTime());
-      const minStart = Math.min(...startTimes);
-      const maxStart = Math.max(...startTimes);
-      const timeDiff = maxStart - minStart;
-
-      // If tests started more than 500ms apart, likely sequential
-      if (timeDiff > 500) {
-        return 1;
-      } else {
-        // Tests started close together = parallel
-        return 2; // Default to 2 if detected as parallel
-      }
-    }
-
-    // Default: if config has fullyParallel true and no explicit workers = unlimited
-    // We'll default to 2 (likely parallel in CI/local with default settings)
-    return 2;
+    return this.workerCount;
   }
 
   /**

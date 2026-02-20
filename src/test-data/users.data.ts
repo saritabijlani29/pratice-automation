@@ -12,11 +12,6 @@ const usersByEnv: Record<string, UserRoles> = {
     invalidUsername: { username: 'incorrectUser', password: 'Password123' },
     invalidPassword: { username: 'student', password: 'incorrectPassword' },
   },
-  ci: {
-    valid: { username: 'student', password: 'Password123' },
-    invalidUsername: { username: 'incorrectUser', password: 'Password123' },
-    invalidPassword: { username: 'student', password: 'incorrectPassword' },
-  },
   staging: {
     valid: {
       username: process.env.STANDARD_USER!,

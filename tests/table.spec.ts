@@ -1,8 +1,9 @@
 import { test, expect } from '../src/fixtures/base.fixture';
 
 test.describe('Test Table Page', () => {
-  test.beforeEach(async ({ testTablePage }) => {
-    await testTablePage.navigate();
+  test.beforeEach(async ({ homePage }) => {
+    await homePage.navigate();
+    await homePage.goToTestTablePage();
   });
 
   test('Test case 1: Select Language filter → Java - only Java courses are visible', async ({
@@ -33,122 +34,122 @@ test.describe('Test Table Page', () => {
     await table.validateColumnEquals("Level","Beginner")
   });
 
-  // test('Test case 3: Min enrollments → 10,000+ - every visible row shows enrollments ≥ 10,000', async ({
-  //   testTablePage,}) => {
-  //   const table = testTablePage.tableComponent;
-  //   await testTablePage.selectMinEnrollments('10,000+');
+  test('Test case 3: Min enrollments → 10,000+ - every visible row shows enrollments ≥ 10,000', async ({
+    testTablePage,}) => {
+    const table = testTablePage.tableComponent;
+    await testTablePage.selectMinEnrollments('10,000+');
 
-  //   await table.validateColumnNumericGreaterOrEqual("Enrollments",10000)
-  // });
+    await table.validateColumnNumericGreaterOrEqual("Enrollments",10000)
+  });
 
-  // test('Test case 4: Combined filters → Python + Beginner + 10,000+ - only matching courses visible', async ({
-  //   testTablePage,
-  // }) => {
-  //   const table = testTablePage.tableComponent;
-  //   await testTablePage.selectLanguage('Python');
-  //   await testTablePage.unselectAllLevel();
-  //   await testTablePage.selectLevel('Beginner');
-  //   await testTablePage.selectMinEnrollments('10,000+');
+  test('Test case 4: Combined filters → Python + Beginner + 10,000+ - only matching courses visible', async ({
+    testTablePage,
+  }) => {
+    const table = testTablePage.tableComponent;
+    await testTablePage.selectLanguage('Python');
+    await testTablePage.unselectAllLevel();
+    await testTablePage.selectLevel('Beginner');
+    await testTablePage.selectMinEnrollments('10,000+');
 
-  //   await table.validateColumnEquals('Language', 'Python');
-  //   await table.validateColumnEquals('Level', 'Beginner');
-  //   await table.validateColumnNumericGreaterOrEqual('Enrollments', 10000);
+    await table.validateColumnEquals('Language', 'Python');
+    await table.validateColumnEquals('Level', 'Beginner');
+    await table.validateColumnNumericGreaterOrEqual('Enrollments', 10000);
     
-  // });
+  });
 
-  // test('Test case 5: No results state - "No matching courses." is shown', async ({
-  //   testTablePage,
-  // }) => {
-  //   await testTablePage.setFiltersToNoResults();
+  test('Test case 5: No results state - "No matching courses." is shown', async ({
+    testTablePage,
+  }) => {
+    await testTablePage.setFiltersToNoResults();
 
-  //   await expect(testTablePage.noMatchingMessage).toBeVisible();
-  //   const visible = await testTablePage.isNoMatchingVisible();
-  //   expect(visible).toBe(true);
-  // });
+    await expect(testTablePage.noMatchingMessage).toBeVisible();
+    const visible = await testTablePage.isNoMatchingVisible();
+    expect(visible).toBe(true);
+  });
 
-  // test('Test case 6: Reset button visibility and behavior - defaults restored after Reset', async ({
-  //   testTablePage,
-  // }) => {
-  //  const rowsBeforeReset = await testTablePage.getCourseRowsCount();
-  //  await testTablePage.unselectAllLevel();
-  //   await expect(testTablePage.resetButton).toBeVisible();
+  test('Test case 6: Reset button visibility and behavior - defaults restored after Reset', async ({
+    testTablePage,
+  }) => {
+   const rowsBeforeReset = await testTablePage.getCourseRowsCount();
+   await testTablePage.unselectAllLevel();
+    await expect(testTablePage.resetButton).toBeVisible();
 
-  //   await testTablePage.clickReset();
+    await testTablePage.clickReset();
 
-  //   await expect(testTablePage.resetButton).toBeHidden();
-  //   const rowsAfterReset = await testTablePage.getCourseRowsCount();
-  //   testTablePage.verifyByDefaultSelectedFilters();
+    await expect(testTablePage.resetButton).toBeHidden();
+    const rowsAfterReset = await testTablePage.getCourseRowsCount();
+    testTablePage.verifyByDefaultSelectedFilters();
  
-  //   expect(rowsAfterReset).toEqual(rowsBeforeReset);
-  // });
+    expect(rowsAfterReset).toEqual(rowsBeforeReset);
+  });
 
-  // test('Test case 7: Sort by Enrollments - rows ordered smallest to largest (numeric)', async ({
-  //   testTablePage,
-  // }) => {
-  //   const before = await testTablePage.getColumnValues("enrollments");
-  //   const expected =  [...before].map(Number).sort((a, b) => a - b);
+  test('Test case 7: Sort by Enrollments - rows ordered smallest to largest (numeric)', async ({
+    testTablePage,
+  }) => {
+    const before = await testTablePage.getColumnValues("enrollments");
+    const expected =  [...before].map(Number).sort((a, b) => a - b);
     
-  //   await testTablePage.setSortBy('Enrollments');
+    await testTablePage.setSortBy('Enrollments');
 
-  //   const after = (await testTablePage.getColumnValues("enrollments")).map(Number); 
+    const after = (await testTablePage.getColumnValues("enrollments")).map(Number); 
 
-  //   expect(after).toEqual(expected);
-  // });
+    expect(after).toEqual(expected);
+  });
 
-  // test('Test case 8: Sort by Course Name - rows ordered A→Z by course name', async ({
-  //   testTablePage,
-  // }) => {
-  //   const before = (await testTablePage.getColumnValues("course")).sort((a, b) => 
-  //     a.localeCompare(b));
-  //   await testTablePage.setSortBy('Course Name');
+  test('Test case 8: Sort by Course Name - rows ordered A→Z by course name', async ({
+    testTablePage,
+  }) => {
+    const before = (await testTablePage.getColumnValues("course")).sort((a, b) => 
+      a.localeCompare(b));
+    await testTablePage.setSortBy('Course Name');
 
-  //   const names = await testTablePage.getColumnValues("course");
-  //   const sorted = [...names].sort((a, b) => a.localeCompare(b));
-  //   expect(names).toEqual(sorted);
-  // });
+    const names = await testTablePage.getColumnValues("course");
+    const sorted = [...names].sort((a, b) => a.localeCompare(b));
+    expect(names).toEqual(sorted);
+  });
 
-  // test('Test case 9: Switch language filters multiple times and validate values', async ({
-  //   testTablePage,
-  // }) => {
-  //   const table = testTablePage.tableComponent;
-  //   const initialRows = await table.getVisibleRowCount();
+  test('Test case 9: Switch language filters multiple times and validate values', async ({
+    testTablePage,
+  }) => {
+    const table = testTablePage.tableComponent;
+    const initialRows = await table.getVisibleRowCount();
 
-  //   const filterSequence = ['Java', 'Python', 'Any', 'Java'];
+    const filterSequence = ['Java', 'Python', 'Any', 'Java'];
 
-  //   for (const lang of filterSequence) {
+    for (const lang of filterSequence) {
   
-  //     await testTablePage.selectLanguage(lang);
+      await testTablePage.selectLanguage(lang);
 
-  //     const rows = await table.getVisibleRowCount();
-  //     const courseLanguages = await testTablePage.getColumnValues('language');
+      const rows = await table.getVisibleRowCount();
+      const courseLanguages = await testTablePage.getColumnValues('language');
   
-  //     if (lang === 'Any') {
-  //       expect(rows).toBe(initialRows);
-  //     } else {
-  //       for (const value of courseLanguages) {
-  //         expect(value).toBe(lang);
-  //       }
-  //     }
-  //   }
-  // });
+      if (lang === 'Any') {
+        expect(rows).toBe(initialRows);
+      } else {
+        for (const value of courseLanguages) {
+          expect(value).toBe(lang);
+        }
+      }
+    }
+  });
 
-  // test('Test case 10: Apply level - Java and Sort by enrollments - Validate results ', async ({
-  //   testTablePage,
-  // }) => {
-  //   const table = testTablePage.tableComponent;
-  //   await testTablePage.selectLanguage('Java');
+  test('Test case 10: Apply level - Java and Sort by enrollments - Validate results ', async ({
+    testTablePage,
+  }) => {
+    const table = testTablePage.tableComponent;
+    await testTablePage.selectLanguage('Java');
 
-  //   const tableData  = await table.getTableData();
+    const tableData  = await table.getTableData();
 
-  //   const beforeSort = tableData.map(row => Number(String(row['enrollments']).trim()));
-  //   const expectedSortData =  [...beforeSort].sort((a, b) => a - b);
+    const beforeSort = tableData.map(row => Number(String(row['enrollments']).trim()));
+    const expectedSortData =  [...beforeSort].sort((a, b) => a - b);
 
-  //   await testTablePage.setSortBy('Enrollments');
+    await testTablePage.setSortBy('Enrollments');
 
-  //   const afterSort = (await table.getTableData()).map(row => Number(String(row['enrollments']).trim()));
+    const afterSort = (await table.getTableData()).map(row => Number(String(row['enrollments']).trim()));
 
-  //   expect(afterSort).toEqual(expectedSortData);
-  //   await table.validateColumnEquals("Language","Java")
-  // });
+    expect(afterSort).toEqual(expectedSortData);
+    await table.validateColumnEquals("Language","Java")
+  });
 
 });
