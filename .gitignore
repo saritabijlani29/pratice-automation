@@ -9,7 +9,11 @@ node_modules/
 /playwright/.cache/
 /playwright/.auth/
 
+# Test execution data (regenerated on each run)
+execution-history.json
+
 # Environment (contains secrets)
 playwright.env
-playwright.env.ci
 playwright.env.staging
+.env
+.env.*
