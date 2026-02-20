@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Performance Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+            --light-gray: #f8f9fa;
+            --dark-gray: #212529;
+        }
+
+        body {
+            background-color: var(--light-gray);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 20px 0;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #0a58ca 100%);
+            color: white;
+            padding: 30px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .dashboard-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .dashboard-header .subtitle {
+            font-size: 0.95rem;
+            opacity: 0.95;
+            margin-top: 5px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+        }
+
+        .metric-card.success {
+            border-left-color: var(--success-color);
+        }
+
+        .metric-card.danger {
+            border-left-color: var(--danger-color);
+        }
+
+        .metric-card.info {
+            border-left-color: var(--info-color);
+        }
+
+        .metric-card .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .metric-card.success .metric-value {
+            color: var(--success-color);
+        }
+
+        .metric-card.danger .metric-value {
+            color: var(--danger-color);
+        }
+
+        .metric-card.info .metric-value {
+            color: var(--info-color);
+        }
+
+        .metric-card .metric-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .metric-card .metric-percent {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 8px;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-container h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark-gray);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark-gray);
+        }
+
+        .axis {
+            font-size: 12px;
+        }
+
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #ddd;
+            shape-rendering: crispEdges;
+        }
+
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .tooltip.active {
+            display: block;
+        }
+
+        .legend {
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+            overflow-x: auto;
+        }
+
+        .table thead th {
+            background-color: var(--light-gray);
+            border-top: none;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #6c757d;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody tr {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-badge.passed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.failed {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.skipped {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
+
+        .gallery-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .gallery-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark-gray);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .gallery-title:hover {
+            color: var(--primary-color);
+        }
+
+        .gallery-toggle {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .screenshot-item {
+            cursor: pointer;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .screenshot-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .screenshot-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .screenshot-meta {
+            padding: 8px;
+            background-color: var(--light-gray);
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+
+        .modal-screenshot {
+            max-width: 90vw;
+            max-height: 90vh;
+            object-fit: contain;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-section .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .no-data svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .comparison-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .performance-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 0.95rem;
+        }
+
+        .performance-metric:last-child {
+            border-bottom: none;
+        }
+
+        .performance-metric .label {
+            font-weight: 600;
+            color: #6c757d;
+        }
+
+        .performance-metric .value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .time-saved {
+            color: var(--success-color);
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+            }
+
+            .screenshot-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <div class="container">
+            <h1>Test Performance Dashboard</h1>
+            <p class="subtitle">Historical test execution analysis & evidence tracking</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Summary Statistics -->
+        <div class="stats-row" id="summaryStats">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row">
+                <div class="col-md-3">
+                    <label class="form-label">Environment</label>
+                    <select class="form-select" id="envFilter">
+                        <option value="">All Environments</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Statuses</option>
+                        <option value="passed">Passed</option>
+                        <option value="failed">Failed</option>
+                        <option value="skipped">Skipped</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date From</label>
+                    <input type="date" class="form-control" id="dateFrom">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date To</label>
+                    <input type="date" class="form-control" id="dateTo">
+                </div>
+            </div>
+            <button class="btn btn-primary btn-sm mt-3" onclick="resetFilters()">Reset Filters</button>
+        </div>
+
+        <!-- Pass/Fail Trend Chart -->
+        <div class="chart-container">
+            <h3>Pass/Fail Trend Over Time</h3>
+            <div id="trendChart" style="width: 100%; height: 400px;"></div>
+            <div class="legend" id="trendLegend"></div>
+        </div>
+
+        <!-- Environment Performance Chart -->
+        <div class="chart-container">
+            <h3>Pass Rate by Environment</h3>
+            <div id="envChart" style="width: 100%; height: 300px;"></div>
+        </div>
+
+        <!-- Parallel vs Sequential Comparison -->
+        <div class="comparison-card">
+            <h3>⚡ Execution Performance Analysis: Parallel vs Sequential</h3>
+            <p style="color: #6c757d; font-size: 0.9rem; margin-bottom: 15px;">
+                Compare the actual execution time when tests run in parallel (multiple browsers simultaneously) versus sequential (one test after another)
+            </p>
+            <div id="comparisonChart" style="width: 100%; height: 350px;"></div>
+            
+            <!-- Comparison Legend -->
+            <div class="legend" id="comparisonLegend" style="margin-top: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 4px;">
+                <div class="legend-item" style="display: inline-block; margin-right: 30px;">
+                    <span class="legend-color" style="background-color: #0d6efd;"></span>
+                    <strong>Parallel:</strong> Tests run simultaneously (faster)
+                </div>
+                <div class="legend-item" style="display: inline-block;">
+                    <span class="legend-color" style="background-color: #6c757d;"></span>
+                    <strong>Sequential:</strong> Tests run one-by-one (slower)
+                </div>
+            </div>
+            
+            <div class="mt-3" id="timeSavings">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- Performance Comparison Table -->
+        <div class="table-container">
+            <h3>Performance Details: Last 10 Executions</h3>
+            <table class="table table-sm table-hover" id="performanceTable">
+                <thead>
+                    <tr style="background-color: #f8f9fa;">
+                        <th>Execution</th>
+                        <th>Mode</th>
+                        <th>Workers</th>
+                        <th>Actual Duration</th>
+                        <th>Sum of All Tests</th>
+                        <th>Time Saved</th>
+                        <th>Efficiency</th>
+                    </tr>
+                </thead>
+                <tbody id="performanceTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Execution Summary Table -->
+        <div class="table-container">
+            <h3>Execution History</h3>
+            <table class="table table-hover" id="executionTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Test Name</th>
+                        <th onclick="sortTable(1)">Status</th>
+                        <th onclick="sortTable(2)">Duration (ms)</th>
+                        <th onclick="sortTable(3)">Timestamp</th>
+                        <th onclick="sortTable(4)">Environment</th>
+                        <th>Screenshot</th>
+                    </tr>
+                </thead>
+                <tbody id="executionTableBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Evidence Gallery - HIDDEN -->
+        <div id="gallerySection" style="display: none;">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div class="modal fade" id="screenshotModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Screenshot Evidence</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalScreenshot" src="" alt="Screenshot" class="modal-screenshot" style="max-width: 100%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global data storage
+        let allData = {
+            executions: [],
+            history: {},
+            filteredData: []
+        };
+
+        // Dashboard data will be injected here
+        const dashboardData = {DASHBOARD_DATA_PLACEHOLDER};
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            allData.executions = dashboardData.executions || [];
+            processData();
+            renderDashboard();
+            setupEventListeners();
+        });
+
+        function processData() {
+            // Group data by test name and date
+            allData.filteredData = allData.executions;
+            
+            // Create history map
+            allData.executions.forEach(execution => {
+                if (!allData.history[execution.environment]) {
+                    allData.history[execution.environment] = [];
+                }
+                allData.history[execution.environment].push({
+                    date: new Date(execution.startTime),
+                    passed: execution.summary.passed,
+                    failed: execution.summary.failed,
+                    skipped: execution.summary.skipped,
+                    total: execution.summary.total,
+                    passRate: (execution.summary.passed / execution.summary.total * 100).toFixed(2)
+                });
+            });
+        }
+
+        function renderDashboard() {
+            if (allData.executions.length === 0) {
+                document.querySelector('.container').innerHTML = '<div class="no-data"><p>No test data available yet. Run your tests to see results.</p></div>';
+                return;
+            }
+
+            renderSummaryStats();
+            renderTrendChart();
+            renderEnvironmentChart();
+            renderComparisonChart();
+            renderExecutionTable();
+            // Gallery section removed - use execution table instead
+            populateFilters();
+        }
+
+        function renderSummaryStats() {
+            const totalTests = allData.executions.reduce((sum, e) => sum + e.summary.total, 0);
+            const totalPassed = allData.executions.reduce((sum, e) => sum + e.summary.passed, 0);
+            const totalFailed = allData.executions.reduce((sum, e) => sum + e.summary.failed, 0);
+            const passRate = totalTests > 0 ? (totalPassed / totalTests * 100).toFixed(1) : 0;
+
+            const statsHtml = `
+                <div class="metric-card success">
+                    <div class="metric-label">Passed</div>
+                    <div class="metric-value">${totalPassed}</div>
+                    <div class="metric-percent">${passRate}% pass rate</div>
+                </div>
+                <div class="metric-card danger">
+                    <div class="metric-label">Failed</div>
+                    <div class="metric-value">${totalFailed}</div>
+                </div>
+                <div class="metric-card info">
+                    <div class="metric-label">Total Tests</div>
+                    <div class="metric-value">${totalTests}</div>
+                    <div class="metric-percent">Across ${allData.executions.length} executions</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Last Updated</div>
+                    <div class="metric-value" style="font-size: 1.1rem;">${new Date(allData.executions[allData.executions.length - 1].endTime).toLocaleDateString()}</div>
+                </div>
+            `;
+            document.getElementById('summaryStats').innerHTML = statsHtml;
+        }
+
+        function renderTrendChart() {
+            const width = document.getElementById('trendChart').offsetWidth - 40;
+            const height = 400;
+            const margin = { top: 20, right: 30, bottom: 30, left: 60 };
+
+            // Aggregate data by date
+            const dateMap = new Map();
+            allData.executions.forEach(exec => {
+                const date = new Date(exec.startTime).toLocaleDateString();
+                if (!dateMap.has(date)) {
+                    dateMap.set(date, { passed: 0, failed: 0 });
+                }
+                const data = dateMap.get(date);
+                data.passed += exec.summary.passed;
+                data.failed += exec.summary.failed;
+            });
+
+            const trendData = Array.from(dateMap.entries()).map(([date, data]) => ({
+                date,
+                passed: data.passed,
+                failed: data.failed
+            }));
+
+            // Clear previous
+            d3.select('#trendChart').selectAll('*').remove();
+
+            const svg = d3.select('#trendChart').append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand().range([0, width]).padding(0.1)
+                .domain(trendData.map(d => d.date));
+            const y = d3.scaleLinear().range([height, 0])
+                .domain([0, d3.max(trendData, d => d.passed + d.failed)]);
+
+            // Bars for passed
+            svg.selectAll('.passed-bar')
+                .data(trendData)
+                .enter()
+                .append('rect')
+                .attr('class', 'passed-bar')
+                .attr('x', d => x(d.date))
+                .attr('y', d => y(d.passed))
+                .attr('width', x.bandwidth() / 2)
+                .attr('height', d => height - y(d.passed))
+                .attr('fill', '#198754')
+                .on('mouseover', function(event, d) {
+                    showTooltip(event, `Passed: ${d.passed}`);
+                })
+                .on('mouseout', hideTooltip);
+
+            // Bars for failed
+            svg.selectAll('.failed-bar')
+                .data(trendData)
+                .enter()
+                .append('rect')
+                .attr('class', 'failed-bar')
+                .attr('x', d => x(d.date) + x.bandwidth() / 2)
+                .attr('y', d => y(d.failed))
+                .attr('width', x.bandwidth() / 2)
+                .attr('height', d => height - y(d.failed))
+                .attr('fill', '#dc3545')
+                .on('mouseover', function(event, d) {
+                    showTooltip(event, `Failed: ${d.failed}`);
+                })
+                .on('mouseout', hideTooltip);
+
+            // X axis
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .attr('class', 'axis')
+                .call(d3.axisBottom(x));
+
+            // Y axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y));
+
+            // Legend
+            const legend = document.getElementById('trendLegend');
+            legend.innerHTML = `
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #198754;"></span>
+                    Passed
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background-color: #dc3545;"></span>
+                    Failed
+                </div>
+            `;
+        }
+
+        function renderEnvironmentChart() {
+            const envStats = {};
+            allData.executions.forEach(exec => {
+                if (!envStats[exec.environment]) {
+                    envStats[exec.environment] = { passed: 0, total: 0 };
+                }
+                envStats[exec.environment].passed += exec.summary.passed;
+                envStats[exec.environment].total += exec.summary.total;
+            });
+
+            const envData = Object.entries(envStats).map(([env, data]) => ({
+                environment: env,
+                passRate: data.total > 0 ? (data.passed / data.total * 100).toFixed(1) : 0
+            }));
+
+            const width = document.getElementById('envChart').offsetWidth - 40;
+            const height = 300;
+            const margin = { top: 20, right: 30, bottom: 30, left: 60 };
+
+            d3.select('#envChart').selectAll('*').remove();
+
+            const svg = d3.select('#envChart').append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand().range([0, width]).padding(0.2)
+                .domain(envData.map(d => d.environment));
+            const y = d3.scaleLinear().range([height, 0]).domain([0, 100]);
+
+            svg.selectAll('.env-bar')
+                .data(envData)
+                .enter()
+                .append('rect')
+                .attr('class', 'env-bar')
+                .attr('x', d => x(d.environment))
+                .attr('y', d => y(d.passRate))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d.passRate))
+                .attr('fill', '#0d6efd')
+                .on('mouseover', function(event, d) {
+                    showTooltip(event, `Pass Rate: ${d.passRate}%`);
+                })
+                .on('mouseout', hideTooltip);
+
+            // Add value labels on bars
+            svg.selectAll('.env-label')
+                .data(envData)
+                .enter()
+                .append('text')
+                .attr('class', 'env-label')
+                .attr('x', d => x(d.environment) + x.bandwidth() / 2)
+                .attr('y', d => y(d.passRate) - 5)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '12px')
+                .attr('font-weight', 'bold')
+                .text(d => `${d.passRate}%`);
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .attr('class', 'axis')
+                .call(d3.axisBottom(x));
+
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y).ticks(5).tickFormat(d => d + '%'));
+        }
+
+        function renderComparisonChart() {
+            const comparisonData = allData.executions.slice(-10).map(exec => {
+                const sumDurations = exec.results.reduce((sum, r) => sum + r.duration, 0);
+                const maxDuration = Math.max(...exec.results.map(r => r.duration));
+                
+                // Use actual total duration if execution mode is known
+                const actualDuration = exec.executionMode === 'sequential' 
+                  ? exec.totalDuration 
+                  : maxDuration;
+                
+                const theoreticalSequential = sumDurations; // Sum of all tests
+                const theoreticalParallel = maxDuration;   // Max test duration
+                
+                return {
+                    id: new Date(exec.startTime).toLocaleDateString(),
+                    executionMode: exec.executionMode || 'unknown',
+                    workers: exec.workers || 'auto',
+                    theoretical: theoreticalSequential,
+                    actual: actualDuration,
+                    saved: theoreticalSequential - theoreticalParallel,
+                    savingPercent: ((theoreticalSequential - theoreticalParallel) / theoreticalSequential * 100).toFixed(1)
+                };
+            });
+
+            const width = document.getElementById('comparisonChart').offsetWidth - 40;
+            const height = 350;
+            const margin = { top: 20, right: 30, bottom: 30, left: 60 };
+
+            d3.select('#comparisonChart').selectAll('*').remove();
+
+            const svg = d3.select('#comparisonChart').append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const x = d3.scaleBand().range([0, width]).padding(0.2)
+                .domain(comparisonData.map(d => d.id));
+            const y = d3.scaleLinear().range([height, 0])
+                .domain([0, d3.max(comparisonData, d => d.actual)]);
+
+            // Actual bars (real execution time) - color coded by execution mode
+            svg.selectAll('.actual-bar')
+                .data(comparisonData)
+                .enter()
+                .append('rect')
+                .attr('class', 'actual-bar')
+                .attr('x', d => x(d.id))
+                .attr('y', d => y(d.actual))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d.actual))
+                .attr('fill', d => d.executionMode === 'parallel' ? '#0d6efd' : '#6c757d')
+                .on('mouseover', function(event, d) {
+                    showTooltip(event, `Actual: ${Math.round(d.actual)}ms (${d.executionMode})`);
+                })
+                .on('mouseout', hideTooltip);
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .attr('class', 'axis')
+                .call(d3.axisBottom(x));
+
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y).tickFormat(d => `${d}ms`));
+
+            // Execution Summary with Enhanced Clarity
+            if (comparisonData.length > 0) {
+                const lastRun = comparisonData[comparisonData.length - 1];
+                const modeEmoji = lastRun.executionMode === 'sequential' ? '⏱️' : '⚡';
+                const modeName = lastRun.executionMode === 'sequential' ? 'SEQUENTIAL' : 'PARALLEL';
+                const savingsHtml = `
+                    <div style="border-radius: 8px; background: linear-gradient(135deg, ${lastRun.executionMode === 'sequential' ? '#f8f9fa' : '#e7f1ff'} 0%, ${lastRun.executionMode === 'sequential' ? '#ffffff' : '#f0f8ff'} 100%); padding: 20px; margin-top: 15px;">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2em; margin-bottom: 5px;">${modeEmoji}</div>
+                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 5px; text-transform: uppercase; font-weight: 600;">Mode</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">${modeName}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2em; margin-bottom: 5px;">⏱️</div>
+                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 5px; text-transform: uppercase; font-weight: 600;">Actual Time</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">${Math.round(lastRun.actual)}ms</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2em; margin-bottom: 5px;">📊</div>
+                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 5px; text-transform: uppercase; font-weight: 600;">Total If Serial</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: #6c757d;">${Math.round(lastRun.theoretical)}ms</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2em; margin-bottom: 5px;">✅</div>
+                                    <div style="font-size: 0.85rem; color: #6c757d; margin-bottom: 5px; text-transform: uppercase; font-weight: 600;">Saved</div>
+                                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--success-color);">${Math.round(lastRun.saved)}ms (${lastRun.savingPercent}%)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('timeSavings').innerHTML = savingsHtml;
+                
+                // Populate performance comparison table
+                const tbody = document.getElementById('performanceTableBody');
+                tbody.innerHTML = '';
+                comparisonData.forEach((data, idx) => {
+                    const modeLabel = data.executionMode === 'sequential' ? '⏱️ Sequential' : '⚡ Parallel';
+                    const savingPercent = data.theoretical > 0 ? ((data.saved / data.theoretical) * 100).toFixed(1) : 0;
+                    const efficiencyBadge = data.executionMode === 'parallel' 
+                        ? `<span class="status-badge" style="background-color: #d4edda; color: #155724;">High ${savingPercent}%</span>`
+                        : `<span class="status-badge" style="background-color: #e2e3e5; color: #383d41;">Low</span>`;
+                    
+                    const row = `
+                        <tr>
+                            <td>${data.id}</td>
+                            <td>${modeLabel}</td>
+                            <td>${data.workers}</td>
+                            <td><strong>${Math.round(data.actual)}ms</strong></td>
+                            <td>${Math.round(data.theoretical)}ms</td>
+                            <td><span style="font-weight: 700; color: var(--success-color);">${Math.round(data.saved)}ms</span></td>
+                            <td>${efficiencyBadge}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            }
+        }
+
+        function renderExecutionTable() {
+            const tbody = document.getElementById('executionTableBody');
+            tbody.innerHTML = '';
+
+            const allTests = [];
+            allData.executions.forEach(exec => {
+                exec.results.forEach(result => {
+                    allTests.push({
+                        ...result,
+                        executionDate: new Date(exec.startTime).toLocaleDateString()
+                    });
+                });
+            });
+
+            // Apply filters
+            let filteredTests = allTests;
+            const envFilter = document.getElementById('envFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
+
+            if (envFilter) {
+                filteredTests = filteredTests.filter(t => t.environment === envFilter);
+            }
+            if (statusFilter) {
+                filteredTests = filteredTests.filter(t => t.status === statusFilter);
+            }
+            if (dateFrom) {
+                const fromDate = new Date(dateFrom);
+                filteredTests = filteredTests.filter(t => new Date(t.timestamp) >= fromDate);
+            }
+            if (dateTo) {
+                const toDate = new Date(dateTo);
+                toDate.setHours(23, 59, 59, 999);
+                filteredTests = filteredTests.filter(t => new Date(t.timestamp) <= toDate);
+            }
+
+            filteredTests.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            if (filteredTests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No tests match the selected filters</td></tr>';
+                return;
+            }
+
+            filteredTests.forEach(test => {
+                const statusClass = `status-badge ${test.status}`;
+                const screenshotLink = test.screenshotPath ? 
+                    `<a href="#" onclick="showScreenshot('${test.screenshotPath}'); return false;" class="btn btn-sm btn-outline-primary">View</a>` : 
+                    '<span class="text-muted">N/A</span>';
+
+                const row = `
+                    <tr>
+                        <td>${test.testName}</td>
+                        <td><span class="${statusClass}">${test.status}</span></td>
+                        <td>${test.duration}ms</td>
+                        <td>${new Date(test.timestamp).toLocaleString()}</td>
+                        <td>${test.environment}</td>
+                        <td>${screenshotLink}</td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('gallerySection');
+            gallery.innerHTML = '';
+
+            // Group screenshots by test name
+            const testScreenshots = {};
+            allData.executions.forEach(exec => {
+                exec.results.forEach(result => {
+                    if (result.screenshotPath) {
+                        if (!testScreenshots[result.testName]) {
+                            testScreenshots[result.testName] = [];
+                        }
+                        testScreenshots[result.testName].push({
+                            path: result.screenshotPath,
+                            timestamp: result.timestamp,
+                            status: result.status,
+                            duration: result.duration
+                        });
+                    }
+                });
+            });
+
+            Object.entries(testScreenshots).forEach(([testName, screenshots]) => {
+                const collapsed = Math.random() > 0.3; // Keep most collapsed by default
+                const section = document.createElement('div');
+                section.className = 'gallery-section';
+                
+                let gridHtml = '<div class="screenshot-grid">';
+                screenshots.forEach((ss, idx) => {
+                    const statusClass = `status-badge ${ss.status}`;
+                    gridHtml += `
+                        <div class="screenshot-item">
+                            <img src="${ss.path}" alt="${testName}" onclick="showScreenshot('${ss.path}')">
+                            <div class="screenshot-meta">
+                                <div><span class="${statusClass}">${ss.status}</span></div>
+                                <small>${new Date(ss.timestamp).toLocaleString()}</small>
+                            </div>
+                        </div>
+                    `;
+                });
+                gridHtml += '</div>';
+
+                section.innerHTML = `
+                    <div class="gallery-title" onclick="toggleGallery(this)">
+                        <span class="gallery-toggle">${collapsed ? '▶' : '▼'}</span>
+                        <span>${testName}</span>
+                    </div>
+                    <div class="gallery-content" style="display: ${collapsed ? 'none' : 'block'};">
+                        ${gridHtml}
+                    </div>
+                `;
+                gallery.appendChild(section);
+            });
+        }
+
+        function toggleGallery(element) {
+            const content = element.nextElementSibling.querySelector('.gallery-content');
+            const toggle = element.querySelector('.gallery-toggle');
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            toggle.textContent = isHidden ? '▼' : '▶';
+        }
+
+        function showScreenshot(imagePath) {
+            const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
+            document.getElementById('modalScreenshot').src = imagePath;
+            modal.show();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('envFilter').addEventListener('change', applyFilters);
+            document.getElementById('statusFilter').addEventListener('change', applyFilters);
+            document.getElementById('dateFrom').addEventListener('change', applyFilters);
+            document.getElementById('dateTo').addEventListener('change', applyFilters);
+        }
+
+        function populateFilters() {
+            const envs = new Set();
+            allData.executions.forEach(exec => envs.add(exec.environment));
+            const envFilter = document.getElementById('envFilter');
+            envs.forEach(env => {
+                const option = document.createElement('option');
+                option.value = env;
+                option.textContent = env;
+                envFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            // Re-render execution table with applied filters
+            renderExecutionTable();
+        }
+
+        function resetFilters() {
+            document.getElementById('envFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            allData.filteredData = allData.executions;
+            renderDashboard();
+        }
+
+        function sortTable(columnIndex) {
+            console.log('Sort by column:', columnIndex);
+        }
+
+        function showTooltip(event, text) {
+            // D3 tooltip implementation
+        }
+
+        function hideTooltip() {
+            // Hide tooltip
+        }
+    </script>
+</body>
+</html>

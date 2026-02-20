@@ -1,0 +1,80 @@
+{
+  "executions": [
+    {
+      "executionId": "exec-1771533172-d5dd0012",
+      "startTime": "2026-02-19T20:32:40.732Z",
+      "endTime": "2026-02-19T20:32:52.863Z",
+      "totalDuration": 12131,
+      "environment": "local",
+      "executionMode": "parallel",
+      "workers": null,
+      "results": [
+        {
+          "testName": "Test Table Page > Test case 1: Select Language filter → Java - only Java courses are visible",
+          "status": "passed",
+          "duration": 6543,
+          "timestamp": "2026-02-19T20:32:43.241Z",
+          "retries": 0,
+          "projectName": "chromium",
+          "environment": "local",
+          "screenshotPath": "screenshots/2026-02-20/local/test_case_1_select_language_filter_java_-_only_java_courses_are_visible_1771533171984_pass.png"
+        },
+        {
+          "testName": "Test Table Page > Test case 2: Level filter → Beginner only - only Beginner courses are visible",
+          "status": "passed",
+          "duration": 6569,
+          "timestamp": "2026-02-19T20:32:42.979Z",
+          "retries": 0,
+          "projectName": "chromium",
+          "environment": "local",
+          "screenshotPath": "screenshots/2026-02-20/local/test_case_2_level_filter_beginner_only_-_only_beginner_courses_are_visible_1771533172133_pass.png"
+        }
+      ],
+      "summary": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "total": 2
+      }
+    },
+    {
+      "executionId": "exec-1771533248-e7a6ae07",
+      "startTime": "2026-02-19T20:34:00.681Z",
+      "endTime": "2026-02-19T20:34:08.296Z",
+      "totalDuration": 7615,
+      "environment": "local",
+      "executionMode": "parallel",
+      "workers": null,
+      "results": [
+        {
+          "testName": "Test Table Page > Test case 1: Select Language filter → Java - only Java courses are visible",
+          "status": "passed",
+          "duration": 2583,
+          "timestamp": "2026-02-19T20:34:02.681Z",
+          "retries": 0,
+          "projectName": "chromium",
+          "environment": "local",
+          "screenshotPath": "screenshots/2026-02-20/local/test_case_1_select_language_filter_java_-_only_java_courses_are_visible_1771533245265_pass.png"
+        },
+        {
+          "testName": "Test Table Page > Test case 2: Level filter → Beginner only - only Beginner courses are visible",
+          "status": "passed",
+          "duration": 2452,
+          "timestamp": "2026-02-19T20:34:05.610Z",
+          "retries": 0,
+          "projectName": "chromium",
+          "environment": "local",
+          "screenshotPath": "screenshots/2026-02-20/local/test_case_2_level_filter_beginner_only_-_only_beginner_courses_are_visible_1771533247742_pass.png"
+        }
+      ],
+      "summary": {
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "total": 2
+      }
+    }
+  ],
+  "lastUpdated": "2026-02-19T20:34:08.298Z",
+  "totalRuns": 2
+}

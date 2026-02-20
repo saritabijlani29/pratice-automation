@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/reports/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Environment (contains secrets)
+playwright.env
+playwright.env.ci
+playwright.env.staging
